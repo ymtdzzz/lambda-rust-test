@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "serverless": "^1.74.1",
+    "serverless-offline": "git+ssh://git@github.com/EgorDm/serverless-offline.git#feature/rust-invoke",
+    "serverless-rust": "^0.3.8"
+  },
+  "name": "rust-lambda-test"
+}
