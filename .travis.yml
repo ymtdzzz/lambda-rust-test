@@ -2,10 +2,9 @@ language: rust
 rust:
   - nightly
 cache: cargo
-node_js: "12.0"
 install:
-  - nvm install stable --latest-npm
-  - nvm alias default stable
+  - nvm install 12.14.1 --latest-npm
+  - nvm alias default 12.14.1
   - npm install serverless -g
   - npm install
 before_script:
