@@ -8,3 +8,7 @@ rustfmt.toml
 lcov.info
 
 report/
+
+ccov.zip
+
+lcov_correct.info
