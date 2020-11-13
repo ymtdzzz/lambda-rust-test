@@ -1,37 +1,175 @@
-use lambda_http::{handler, lambda, Context, IntoResponse, Request};
-use serde_json::json;
+use std::env;
 
-type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
+use lambda::{handler_fn, Context};
+use anyhow::{anyhow, Result};
+use serde_derive::{Deserialize, Serialize};
+use simple_logger::SimpleLogger;
+use log::{LevelFilter, error};
+use rusoto_s3::{
+    S3,
+    S3Client,
+    PutObjectRequest,
+};
+use rusoto_core::Region;
+use rusoto_mock::{
+    MockCredentialsProvider,
+    MockRequestDispatcher,
+    MockResponseReader,
+    ReadMockResponse,
+};
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct CustomEvent {
+    text_body: Option<String>,
+}
+
+#[derive(Serialize, Debug, PartialEq)]
+struct CustomOutput {
+    message: String,
+}
+
+const MOCK_KEY: &str = "AWS_MOCK_FLAG";
+const BUCKET_NAME_KEY: &str = "BUCKET_NAME";
+const LOCAL_KEY: &str = "LOCAL_FLAG";
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
-    lambda::run(handler(hello)).await?;
+async fn main() -> Result<()> {
+    SimpleLogger::new().with_level(LevelFilter::Debug).init().unwrap();
+    lambda::run(handler_fn(hello))
+        .await
+        // https://github.com/dtolnay/anyhow/issues/35
+        .map_err(|err| anyhow!(err))?;
     Ok(())
 }
 
-async fn hello(_: Request, _: Context) -> Result<impl IntoResponse, Error> {
-    // `serde_json::Values` impl `IntoResponse` by default
-    // creating an application/json response
-    Ok(json!({
-        "message": "Go Serverless v1.0! Your function executed successfully!"
-    }))
+async fn hello(event: CustomEvent, c: Context) -> Result<CustomOutput> {
+    if let None = event.text_body {
+        error!("Empty text body in request {}", c.request_id);
+        return Err(anyhow!("[400] Empty text body"));
+    }
+    let text = event.text_body.unwrap();
+    if text.len() > 100 {
+        error!("text body is too long (max: 100) in request {}", c.request_id);
+        return Err(anyhow!("[400] text body is too long (max: 100)"));
+    }
+    let s3 = get_s3_client();
+    let bucket_name = env::var(BUCKET_NAME_KEY)?;
+    s3.put_object(PutObjectRequest {
+        bucket: bucket_name.to_string(),
+        key: "test.txt".to_string(),
+        body: Some(text.into_bytes().into()),
+        acl: Some("public-read".to_string()),
+        ..Default::default()
+    }).await?;
+    
+    Ok(CustomOutput {
+        message: format!("Succeeded.")
+    })
+}
+
+fn get_s3_client() -> S3Client {
+    let s3 = match env::var(MOCK_KEY) {
+        Ok(_) => {
+            // Unit Test
+            S3Client::new_with(
+                MockRequestDispatcher::default().with_body(
+                    &MockResponseReader::read_response("mock_data", "s3_test.json")
+                ),
+                MockCredentialsProvider,
+                Default::default(),
+            )
+        },
+        Err(_) => {
+            if env::var(LOCAL_KEY).unwrap() != "" {
+                // local
+                return S3Client::new(Region::Custom {
+                    name: "ap-northeast-1".to_owned(),
+                    endpoint: "http://host.docker.internal:8000".to_owned(),
+                })
+            }
+            // cloud
+            return S3Client::new(Region::ApNortheast1)
+        },
+    };
+    s3
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    fn setup() {
+        env::set_var(MOCK_KEY, "1");
+        env::set_var(BUCKET_NAME_KEY, "test-bucket");
+    }
+
+    #[test]
+    fn can_get_local_s3_client() {
+        env::set_var(LOCAL_KEY, "local");
+        let _s3 = get_s3_client();
+        assert!(true);
+    }
+
+    #[test]
+    fn can_get_cloud_s3_client() {
+        env::set_var(LOCAL_KEY, "");
+        let _s3 = get_s3_client();
+        assert!(true);
+    }
+
     #[tokio::test]
-    async fn hello_handles() {
-        let request = Request::default();
-        let expected = json!({
-            "message": "Go Serverless v1.0! Your function executed successfully!"
-        })
-        .into_response();
-        let response = hello(request, Context::default())
-            .await
-            .expect("expected Ok(_) value")
-            .into_response();
-        assert_eq!(response.body(), expected.body())
+    async fn can_hello_handler_handle_valid_request() {
+        setup();
+        let event = CustomEvent {
+            text_body: Some("Firstname".to_string())
+        };
+        let expected = CustomOutput {
+            message: "Succeeded.".to_string()
+        };
+        assert_eq!(
+            hello(event, Context::default())
+                .await
+                .expect("expected Ok(_) value"),
+            expected
+        )
+    }
+
+    #[tokio::test]
+    async fn can_hello_handler_handle_empty_text_body() {
+        setup();
+        let event = CustomEvent {
+            text_body: None
+        };
+        let result = hello(event, Context::default()).await;
+        assert!(result.is_err());
+        if let Err(error) = result {
+            assert_eq!(
+                error.to_string(),
+                "[400] Empty text body".to_string()
+            )
+        } else {
+            // result must be Err
+            panic!()
+        }
+    }
+
+    #[tokio::test]
+    async fn can_hello_handler_handle_text_body_too_long() {
+        setup();
+        let event = CustomEvent {
+            text_body: Some("12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901".to_owned())
+        };
+        let result = hello(event, Context::default()).await;
+        assert!(result.is_err());
+        if let Err(error) = result {
+            assert_eq!(
+                error.to_string(),
+                "[400] text body is too long (max: 100)".to_string()
+            )
+        } else {
+            // result must be Err
+            panic!()
+        }
     }
 }

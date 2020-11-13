@@ -2,3 +2,9 @@ node_modules
 .serverless
 target
 rustfmt.toml
+
+.log/
+
+lcov.info
+
+report/

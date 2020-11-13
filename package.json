@@ -1,8 +1,14 @@
 {
+  "scripts": {
+    "start": "AWS_PROFILE=s3local sls offline start --stage local",
+    "deploy:dev": "sls deploy --stage dev",
+    "coverage": "sh coverage.sh"
+  },
   "devDependencies": {
     "serverless": "^1.74.1",
     "serverless-offline": "git+ssh://git@github.com/EgorDm/serverless-offline.git#feature/rust-invoke",
-    "serverless-rust": "^0.3.8"
+    "serverless-rust": "^0.3.8",
+    "serverless-s3-local": "^0.6.7"
   },
   "name": "rust-lambda-test"
 }
