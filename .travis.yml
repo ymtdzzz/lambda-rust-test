@@ -4,6 +4,8 @@ rust:
 cache: cargo
 node_js: "12.0"
 install:
+  - nvm install stable --latest-npm
+  - nvm alias default stable
   - npm install serverless
   - npm install
 before_script:
