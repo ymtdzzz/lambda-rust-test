@@ -1,6 +1,5 @@
 language: rust
 rust:
-  - stable
   - nightly
 cache: cargo
 node_js: "12.0"
