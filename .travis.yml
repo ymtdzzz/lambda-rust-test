@@ -4,7 +4,7 @@ rust:
 cache: cargo
 node_js: "12.0"
 install:
-  - npm install serverless -g
+  - npm install serverless
   - npm install
 before_script:
   - cargo test
