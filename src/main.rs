@@ -125,7 +125,7 @@ mod tests {
             text_body: Some("Firstname".to_string())
         };
         let expected = CustomOutput {
-            message: "Succeeded.".to_string()
+            message: "Succeeded!".to_string()
         };
         assert_eq!(
             hello(event, Context::default())
