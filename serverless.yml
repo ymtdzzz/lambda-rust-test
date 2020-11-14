@@ -53,6 +53,8 @@ custom:
   bucketName:
     local: zeroclock-lambda-rust-bucket-local
     dev: zeroclock-lambda-rust-bucket-dev
+    release: zeroclock-lambda-rust-bucket-release
   localFlag:
     local: local
     dev: ''
+    release: ''

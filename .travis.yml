@@ -13,7 +13,8 @@ before_script:
   - cargo test
 script:
   - npm run coverage:nogen
-  - npm run deploy:dev
+  - '[ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" != "false" ] && echo "This is master which released to dev stage. && npm run deploy:dev"'
+  - '[ "$TRAVIS_BRANCH" == "release" ] && [ "$TRAVIS_PULL_REQUEST" != "false" ] && echo "This is release which released to release stage. && npm run deploy:release"'
 env:
   global:
     - secure: "A7F4tQLIy4uSfMH8a+TkspsXnGXXdLvOZC1ezGBlzr5P4Rp0h5KgFfK7bmCebHGuUxGB1mt2gutVNyj4kh+bgD5mmCnXHj0pOQUDuxj0JVI2LTtporm/mh4FZkbmhnXEITb2n5rIM2xyBe1rE61cCyr4LUfHt3V6GmEdOsun20MuxKjY4X79fosAtFGFm5DaQ4enkJuoYZ4/OAGpEu2BcA6+SwETsk/PwkegDK7S2p/gXDD1vqfXsHf6GGi/xFhoS/LTXyakiyweFCVbhZndXU3rLjOWshxmHWU9lJ6WXlrbQpZsmyyg9BCj0+cz2Qsv7YZYYI7CxpYLSQJGRIfRAC7adtapmYZCzoe5kDHTdjYu1eIWgysMZyoypE5boP84JNoQBb+Z8Zk05nVJ5nNe6y9320OrZCEuN+HNnnbb9JVwQ0vPhFpS9jXi6ngsCrZkOvwWalmXI9HRou32kcGudCAftzIN4TZx+p8wUCrLP3ZFevAG0pE7hAzyykE6C6Ub/Eo/jF9gv5xbgGqwaQrYYKJS7rKsoRxRBP8jjS5lrxKRljkATvceqoHMhbZT9LSfWrh7tmthlbPJYRVha5EhU1ctlhqQVGUH0vEEwV1qvFkyIYfujkCLKJVSdMJx4VStthy+EeLFyY2RP9KFTepxCWFTiiaVOmNC8WpNmFlNAK8="

@@ -2,6 +2,7 @@
   "scripts": {
     "start": "AWS_PROFILE=s3local sls offline start --stage local",
     "deploy:dev": "sls deploy --stage dev",
+    "deploy:release": "sls deploy --stage release",
     "coverage": "sh coverage.sh",
     "coverage:nogen": "bash coverage.sh no-genhtml"  
   },
