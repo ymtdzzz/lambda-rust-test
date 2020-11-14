@@ -14,7 +14,10 @@ cargo +nightly test
 zip -0 ccov.zip `find . \( -name "${PROJ_NAME}*.gc*" -o -name "test-*.gc*" \) -print`
 grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" --ignore "tests/*" -o lcov.info
 rust-covfix -o lcov.info lcov.info
-genhtml -o report/ --show-details --highlight --ignore-errors source --legend lcov_correct.info --branch-coverage
+
+if [ $# = 1 ]; then
+    genhtml -o report/ --show-details --highlight --ignore-errors source --legend lcov.info --branch-coverage
+fi
 
 bash <(curl -s https://codecov.io/bash) -f lcov.info -t "${CODECOV_TOKEN}"
 

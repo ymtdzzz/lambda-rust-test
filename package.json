@@ -2,7 +2,8 @@
   "scripts": {
     "start": "AWS_PROFILE=s3local sls offline start --stage local",
     "deploy:dev": "sls deploy --stage dev",
-    "coverage": "sh coverage.sh"
+    "coverage": "sh coverage.sh",
+    "coverage:nogen": "sh coverage.sh no-genhtml"  
   },
   "devDependencies": {
     "serverless": "^1.74.1",
