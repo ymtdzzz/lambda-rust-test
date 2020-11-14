@@ -15,7 +15,7 @@ zip -0 ccov.zip `find . \( -name "${PROJ_NAME}*.gc*" -o -name "test-*.gc*" \) -p
 grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" --ignore "tests/*" -o lcov.info
 rust-covfix -o lcov.info lcov.info
 
-if [ $# = 1 ]; then
+if [ $# != 1 ]; then
     genhtml -o report/ --show-details --highlight --ignore-errors source --legend lcov.info --branch-coverage
 fi
 
