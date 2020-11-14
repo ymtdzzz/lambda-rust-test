@@ -64,7 +64,7 @@ async fn hello(event: CustomEvent, c: Context) -> Result<CustomOutput> {
     }).await?;
     
     Ok(CustomOutput {
-        message: format!("Succeeded.")
+        message: format!("Succeeded!")
     })
 }
 

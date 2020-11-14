@@ -12,6 +12,7 @@ install:
 before_script:
   - cargo test
 script:
+  - sh coverage.sh
   - npm run deploy:dev
 env:
   global:
