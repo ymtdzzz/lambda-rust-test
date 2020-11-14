@@ -32,6 +32,8 @@ struct CustomOutput {
 const MOCK_KEY: &str = "AWS_MOCK_FLAG";
 const BUCKET_NAME_KEY: &str = "BUCKET_NAME";
 const LOCAL_KEY: &str = "LOCAL_FLAG";
+const MSG_EMPTY_TEXT_BODY: &str = "Empty text body.";
+const MSG_TEXT_BODY_TOO_LONG: &str = "Text body is too long (max: 100)";
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -46,12 +48,12 @@ async fn main() -> Result<()> {
 async fn hello(event: CustomEvent, c: Context) -> Result<CustomOutput> {
     if let None = event.text_body {
         error!("Empty text body in request {}", c.request_id);
-        return Err(anyhow!("[400] Empty text body"));
+        return Err(anyhow!(get_err_msg(400, MSG_EMPTY_TEXT_BODY)));
     }
     let text = event.text_body.unwrap();
     if text.len() > 100 {
         error!("text body is too long (max: 100) in request {}", c.request_id);
-        return Err(anyhow!("[400] text body is too long (max: 100)"));
+        return Err(anyhow!(get_err_msg(400, MSG_TEXT_BODY_TOO_LONG)));
     }
     let s3 = get_s3_client();
     let bucket_name = env::var(BUCKET_NAME_KEY)?;
@@ -93,6 +95,10 @@ fn get_s3_client() -> S3Client {
         },
     };
     s3
+}
+
+fn get_err_msg(code: u16, msg: &str) -> String {
+    format!("[{}] {}", code, msg)
 }
 
 #[cfg(test)]
@@ -146,7 +152,7 @@ mod tests {
         if let Err(error) = result {
             assert_eq!(
                 error.to_string(),
-                "[400] Empty text body".to_string()
+                format!("[400] {}", MSG_EMPTY_TEXT_BODY)
             )
         } else {
             // result must be Err
@@ -165,7 +171,7 @@ mod tests {
         if let Err(error) = result {
             assert_eq!(
                 error.to_string(),
-                "[400] text body is too long (max: 100)".to_string()
+                format!("[400] {}", MSG_TEXT_BODY_TOO_LONG)
             )
         } else {
             // result must be Err
